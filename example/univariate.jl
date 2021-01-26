@@ -2,25 +2,32 @@
 Example: a univariate time series (local linear trend) with an increasing variance, going from 1 to 5.
 """
 
-T = 1_000
-y = zeros(T, 1)
-F = [1, 0]
-G = Matrix(I, 2, 2)
-m = zeros(2, 1)
-P = Matrix(I, 2, 2) * 1000
-S = Matrix(I, 1, 1)
+# Packages
+using Plots
+using Distributions
 
-#s = StateSpaceModel(y, F, G, m, P, S, 0.95, 0.95)
-s = LocalLevelTrend(y, m, P, S, 0.98, 0.98)
+# Generate time series with a doubling in volatility after 500 observations
+Σ = 2.0
+T = 10_000
+y = randn(T, 1) * Σ
 
+# Construct priors
+priors = Priors(fill(-1.0, 1, 1), Matrix(1000.0I, 1, 1), Matrix(1.0I, 1, 1), 0.998, 0.9995)
 
 # Simulate
-simulate!(s)
+#O = simulate!(s)
 
 # Estimate
-m = estimate(s)
+estimated = estimate(y, priors)
 
-plot([s.y m.predicted.μ m.filtered.μ], labels = ["Simulated" "Predicted" "Filtered"], legend = :topleft)
+# Plot simulated data and estimated means
+scatter(estimated.y, color = [:blue], markeralpha = 0.5, label = "y")
+plot!(estimated.μ, color = [:blue], linewidth = 2; label = "μ")
 
-#plot([y m.predicted.μ m.filtered.μ], labels = ["True" "Predicted" "Filtered"], legend = :topleft)
-#plot([fill(Σ, T) m.predicted.Σ[:, 1, 1] m.filtered.Σ[:, 1, 1]][2:end, :], labels = ["True" "Predicted" "Filtered"], legend = :topleft)
+# Plot true and estimated variances
+plot([estimated.Σ[:, 1, 1] estimated.Σ[:, 2, 2]], color = [:blue :red], linewidth = 1; label = "Predicted variance", layout = (2, 1), ylim = [0.0, 10.0])
+plot!([[ones(T)*2;ones(T)] [ones(T)*4;ones(T)]], color = :grey, linewidth = 2, label = "True variance")
+
+# Plot estimated variances vs. variance of state
+plot([estimated.Σ[:, 1, 1] estimated.Σ[:, 2, 2]], color = [:blue :red], linewidth = 1; label = "", layout = (2, 1), ylim = [0.0, 10.0])
+plot!([estimated.Ω[:, 1, 1] estimated.Ω[:, 2, 2]], color = :grey, label = "")

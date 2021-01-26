@@ -60,16 +60,16 @@ end
 function Estimation(y::Matrix{<:Real}, d::Integer, β::Real, δ::Real)
     T, p = size(y)
     a = d*p + 1
-    return Estimation(zeros(T, p),          # y
-                      zeros(T, a, p),       # m
-                      zeros(T, a, a),       # P
-                      zeros(T, p, p),       # S
-                      zeros(T, a*p, a*p),   # Ω
+    return Estimation(zeros(T, p),            # y
+                      zeros(T + 1, a, p),     # m
+                      zeros(T + 1, a, a),     # P
+                      zeros(T + 1, p, p),     # S
+                      zeros(T + 1, a*p, a*p), # Ω
                       β,
                       δ,
-                      zeros(T, p),          # μ
-                      zeros(T, p, p),       # Σ
-                      get_ν(β),             # ν - degrees of freedom
-                      zeros(T, p),          # e - prediction error
-                      zeros(T, p))          # u - scaled prediction error
+                      zeros(T + 1, p),        # μ
+                      zeros(T + 1, p, p),     # Σ
+                      get_ν(β),               # ν - degrees of freedom
+                      zeros(T, p),            # e - prediction error
+                      zeros(T, p))            # u - scaled prediction error
 end

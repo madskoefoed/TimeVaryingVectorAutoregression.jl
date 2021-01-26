@@ -9,7 +9,7 @@ get_k(p, β) = (β - p*β + p)/(2β - p*β + p - 1)
 #prior_covariance(Q, S, β) = Q * (1 - β) / (3β*get_k(size(S, 1), β) - 2*get_k(size(S, 1), β)) * S
 #posterior_covariance(Q, S, β) = Q * (1 - β) / (2β - 1) * S
 
-function diagnostics(estim::Estimation)
+function goodness_of_fit(estim::Estimation)
     ME = mean(estim.e; dims = 1)
     MAE = mean(abs.(estim.e); dims = 1)
     RMSE = sqrt.(mean(estim.e.^2; dims = 1))
@@ -53,3 +53,49 @@ end
 #    S = S/k + e*e'/Q
 #    return (m, P, S, μ, Σ)
 #end
+
+# Local level multivariate Kalman filter
+function kalman_filter(y::Matrix{<:Real}, R = 1.0, Q = 1.0)
+    T, p = size(y)
+
+    m = zeros(p)
+    P = Matrix(1000.0*I, p, p)
+    R = Matrix(1.0*I, p, p) .* R
+    Q = Matrix(0.01*I, p, p) .* Q
+
+    out = (m = zeros(T + 1, p), P = fill(1000.0, T + 1, p, p), S = fill(1.0, T + 1, p, p), e = zeros(T, p))
+
+    for t = 1:T
+        # Predict
+        m = m
+        P = P + Q
+
+        # Update
+        S = P + R
+        K = P * inv(R + P)
+        e = y[t, :] - m
+        m = m + K * e
+        P = P - K * P
+
+        out.e[t, :] = e
+
+        out.m[t + 1, :]    = m
+        out.P[t + 1, :, :] = P
+        out.S[t + 1, :, :] = S
+
+    end
+
+    ll = sum([logpdf(Normal(out.m[t, 1], out.S[t, 1, 1]), y[t, 1]) for t = 1:T])
+    return out, ll
+end
+
+kf = kalman_filter(y)
+ss = statespace(local_level(y))
+
+opt = [kalman_filter(y, 2.0^i, 2.0^j)[2] for i in -5:10, j in -5:10]
+
+kf = kalman_filter(y, 2.0^7, 2.0^4)
+
+scatter(y[:, 1], label = "Observations")
+plot!(kf[1].m[:, 1], label = "KF")
+plot!(ss.filter.a[:, 1, 1], label = "StateSpace")
