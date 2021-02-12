@@ -3,6 +3,7 @@ num2mat(x::Real) = fill(x, 1, 1)
 vec2mat(x::Vector) = repeat(x, 1, 1)
 
 get_ν(β) = β/(1 - β)
+get_β(ν) = ν/(1 + ν)
 get_k(p, β) = (β - p*β + p)/(2β - p*β + p - 1)
 
 #prior_mean(F, m) = m' * F
@@ -18,18 +19,19 @@ function goodness_of_fit(estim::Estimation)
     return (ME = ME, MAE = MAE, RMSE = RMSE, MSSE = MSSE, LogLik = LL)
 end
 
+
 # Predict at time t-1
 #Σ = Q * (1 - β) / (3β*k - 2k) * S
 #Σ = Q * (1 - β) / (2β - 1) * S
 #u = inv(cholesky(Σ).L) * e
 
-#function predict_step(y, F, m, P, S, β, δ, k)
-#    R = P / δ
+#function predict_step!(y, F, priors)
+#    R = P.priors / priors.δ
 #    Q = F' * R * F + 1.0
-#    μ = m' * F
-#    Σ = Q * (1 - β) / (3β*k - 2k) * S
-#    e = y - μ
-#    S = S/k
+#    S = S / priors.k
+#    μ = priors.m' * F
+#    Σ = Q * (1 - priors.β) / (3priors.β - 2) * priors.S
+#    e = y[t, :] - μ
 #    return (R, Q, S, μ, Σ, e)
 #end
 
@@ -53,49 +55,3 @@ end
 #    S = S/k + e*e'/Q
 #    return (m, P, S, μ, Σ)
 #end
-
-# Local level multivariate Kalman filter
-function kalman_filter(y::Matrix{<:Real}, R = 1.0, Q = 1.0)
-    T, p = size(y)
-
-    m = zeros(p)
-    P = Matrix(1000.0*I, p, p)
-    R = Matrix(1.0*I, p, p) .* R
-    Q = Matrix(0.01*I, p, p) .* Q
-
-    out = (m = zeros(T + 1, p), P = fill(1000.0, T + 1, p, p), S = fill(1.0, T + 1, p, p), e = zeros(T, p))
-
-    for t = 1:T
-        # Predict
-        m = m
-        P = P + Q
-
-        # Update
-        S = P + R
-        K = P * inv(R + P)
-        e = y[t, :] - m
-        m = m + K * e
-        P = P - K * P
-
-        out.e[t, :] = e
-
-        out.m[t + 1, :]    = m
-        out.P[t + 1, :, :] = P
-        out.S[t + 1, :, :] = S
-
-    end
-
-    ll = sum([logpdf(Normal(out.m[t, 1], out.S[t, 1, 1]), y[t, 1]) for t = 1:T])
-    return out, ll
-end
-
-kf = kalman_filter(y)
-ss = statespace(local_level(y))
-
-opt = [kalman_filter(y, 2.0^i, 2.0^j)[2] for i in -5:10, j in -5:10]
-
-kf = kalman_filter(y, 2.0^7, 2.0^4)
-
-scatter(y[:, 1], label = "Observations")
-plot!(kf[1].m[:, 1], label = "KF")
-plot!(ss.filter.a[:, 1, 1], label = "StateSpace")

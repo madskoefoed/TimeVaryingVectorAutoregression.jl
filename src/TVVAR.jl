@@ -1,10 +1,10 @@
-module TVVAR
+#module TVVAR
 
 # Code based on Forecasting with time-varying vector autoregressive models (2008), K. Triantafyllopoulos
 
 # Import
 using LinearAlgebra #: diag, kron, I
-using Distributions #: Normal, MvNormal
+using Distributions: Normal, MvNormal
 
 # Include scripts
 include("./src/types.jl")
@@ -15,9 +15,9 @@ include("./src/simulate.jl")
 include("./example/univariate.jl")
 
 # Exported types
-export StateSpace, LocalLevel, LocalLevelTrend
+export TVVAR, KF
 
 # Exported functions
 export estimate
 
-end
+#end

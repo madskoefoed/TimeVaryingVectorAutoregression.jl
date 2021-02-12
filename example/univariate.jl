@@ -6,28 +6,28 @@ Example: a univariate time series (local linear trend) with an increasing varian
 using Plots
 using Distributions
 
-# Generate time series with a doubling in volatility after 500 observations
-Σ = 2.0
-T = 10_000
-y = randn(T, 1) * Σ
+# Generate time series with a doubling in volatility after half the observations observations
+T = 1_000
+Σ = vcat(fill(1.0, convert(Integer, T/2)), fill(2.0, convert(Integer, T/2)))
+y = randn(T, 1) .* sqrt.(Σ) .+ 5.0
 
 # Construct priors
-priors = Priors(fill(-1.0, 1, 1), Matrix(1000.0I, 1, 1), Matrix(1.0I, 1, 1), 0.998, 0.9995)
-
-# Simulate
-#O = simulate!(s)
+tvvar_priors = TVVAR(y, fill(-1.0, 1, 1), Matrix(1000.0I, 1, 1), Matrix(1.0I, 1, 1), 0.99, 0.99)
+kf_priors    = TVVAR(y, fill(-1.0, 1, 1), Matrix(1000.0I, 1, 1), Matrix(1.0I, 1, 1), 0.99)
 
 # Estimate
-estimated = estimate(y, priors)
+tvvar_est = estimate(tvvar_priors)
+kf_est    = estimate(kf_priors)
 
 # Plot simulated data and estimated means
-scatter(estimated.y, color = [:blue], markeralpha = 0.5, label = "y")
-plot!(estimated.μ, color = [:blue], linewidth = 2; label = "μ")
+scatter(tvvar_est.y, color = [:blue], markeralpha = 0.5, label = "y")
+plot!(tvvar_est.μ, color = [:blue], linewidth = 2; label = "μ (TVVAR)")
+plot!(kf_est.μ, color = [:blue], linewidth = 2; label = "μ (KF)")
 
 # Plot true and estimated variances
-plot([estimated.Σ[:, 1, 1] estimated.Σ[:, 2, 2]], color = [:blue :red], linewidth = 1; label = "Predicted variance", layout = (2, 1), ylim = [0.0, 10.0])
-plot!([[ones(T)*2;ones(T)] [ones(T)*4;ones(T)]], color = :grey, linewidth = 2, label = "True variance")
+plot(tvvar_est.Σ[:, 1, 1], color = [:blue], linewidth = 1; label = "Predicted variance", ylim = [0.0, 10.0])
+plot!(Σ, color = :blue, linewidth = 2, label = "True variance")
 
 # Plot estimated variances vs. variance of state
-plot([estimated.Σ[:, 1, 1] estimated.Σ[:, 2, 2]], color = [:blue :red], linewidth = 1; label = "", layout = (2, 1), ylim = [0.0, 10.0])
-plot!([estimated.Ω[:, 1, 1] estimated.Ω[:, 2, 2]], color = :grey, label = "")
+plot(tvvar_est.Σ[:, 1, 1], color = [:blue], linewidth = 1; label = "System variance", ylim = [0.0, 10.0])
+plot!(tvvar_est.Ω[:, 1, 1], color = :red, label = "State variance")
