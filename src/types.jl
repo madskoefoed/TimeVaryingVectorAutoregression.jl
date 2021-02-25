@@ -1,4 +1,28 @@
-mutable struct TVVAR
+
+abstract type StateSpaceModel end
+
+mutable struct MSV <: StateSpaceModel
+    y::Array{<:Real, 2} # T x p
+    S::Array{<:Real, 2} # p x p
+    β::Real
+    ν::Real
+
+    function MSV(y, S, β)
+        T, p = size(y)
+        str = "y is $(size(y, 1)) x $(size(y, 2)) and\nS is $(size(S, 1)) x $(size(S, 2))."
+
+        !(size(y, 2) == size(S, 1) == size(S, 2)) && throw(DimensionMismatch(str))
+
+        any(diag(S) .<= 0) && throw(ArgumentError("The diagonal elements of S must be strictly positive."))
+
+        (β > 2/3 && β < 1) || throw(ArgumentError("$(2//3) < β < 1 required (currently $β)."))
+
+        ν = get_ν(β)
+        return new(y, S, β, ν)
+    end
+end
+
+mutable struct TVVAR <: StateSpaceModel
     y::Array{<:Real, 2} # T x p
     m::Array{<:Real, 2} # dp + 1 x p
     P::Array{<:Real, 2} # dp + 1 x dp + 1
@@ -37,6 +61,21 @@ mutable struct Estimation
     δ::Real
     e::Array{<:Real, 2} # T x p
     u::Array{<:Real, 2} # T x p
+end
+
+function Estimation(priors::MSV)
+    T, p = size(priors.y)
+    return Estimation(priors.y,           # y
+                      zeros(T, a, p),     # m
+                      zeros(T, a, a),     # P
+                      zeros(T, p, p),     # S
+                      zeros(T, a*p, a*p), # Ω
+                      zeros(T, p),        # μ
+                      zeros(T, p, p),     # Σ
+                      priors.ν,           # ν
+                      0,                  # δ
+                      zeros(T, p),        # e
+                      zeros(T, p))        # u
 end
 
 function Estimation(priors::TVVAR)

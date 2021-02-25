@@ -1,11 +1,43 @@
 
 """
-estimate(Priors)
+estimate(model::MSV)
+
+Estimate a stochastic volatility model. Volatility is modelled as a random walk.
+
+The hyperparameter 2/3 < β < 1 is a discount factor controlling the shocks to Σ.
+"""
+
+function estimate(model::MSV)
+    y, S, β, ν = model.y, model.S, model.β, model.ν
+
+    T, p = size(y)
+    k = get_k(p, β)
+
+    estim = Estimation(model)
+    for t = 1:T
+        # Predict at time t
+        S = S / k
+        Σ = (1 - β) / (3β - 2) * S
+
+        estim.S[t, :, :] = S
+        estim.Σ[t, :, :] = Σ
+        estim.e[t, :]    = y[t, :]
+        estim.u[t, :]    = inv(cholesky(Σ).L) * y[t, :]
+
+        # Update at time t
+        S = S + y[t, :]*y[t, :]'
+    end
+    return estim
+end
+
+"""
+estimate(model::TVVAR)
 
 Estimate a stochastic volatility model. Volatility is modelled as a random walk.
 
 The hyperparameters 2/3 < β < 1 and 0 < δ ≤ 1 are discount factors, controlling the shocks to the Σ and Ω respectively.
 """
+
 
 function estimate(model::TVVAR)
     y, m, P, S, β, δ, ν = model.y, model.m, model.P, model.S, model.β, model.δ, model.ν
@@ -15,12 +47,11 @@ function estimate(model::TVVAR)
     F = ones(d*p + 1)
     k = get_k(p, β)
 
-    str = "y is $T x $p,\nm is $(size(m, 1)) x $(size(m, 2)),\nP is $(size(P, 1)) x $(size(P, 2)), \nS is $(size(S, 1)) x $(size(S, 2))."
-
-    !(size(m, 1) == size(P, 1) == size(P, 2)) && throw(DimensionMismatch(str))
-    !(p == size(m, 2) == size(S, 1) == size(S, 2)) && throw(DimensionMismatch(str))
-
     estim = Estimation(model)
+    if d > 0
+        
+    end
+
     for t = 1+d:T
         if d > 0
             F[2:end] = vec(y[t-d:t-1, :])
