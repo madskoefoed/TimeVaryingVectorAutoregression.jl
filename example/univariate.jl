@@ -1,15 +1,15 @@
 """
-Example: a univariate time series (local linear trend) with an increasing variance, going from 1 to 5.
+Example: a AR(2) time series with 1000 observations. The variance quadruples after 500 observations.
 """
 
 # Packages
 using Plots
 using Distributions
 
-# Generate an AR(3) time series with a doubling in volatility after half the observations observations:
-# y(t) = -1.0 + 0.5 * y(t-1) - 0.2 y(t-2) - 0.3 * y(t- 3) + Σ
+# Generate an AR(2) time series with a doubling in standard deviation after half the observations observations:
+# y(t) = -1.0 + 0.5 * y(t-1) - 0.5 * y(t- 2) + Σ
 α = -1.0
-β = [0.5, 0.0, -0.5]
+β = [0.5, -0.5]
 b = length(β)
 T = 1_000
 y = zeros(T, 1);
@@ -36,29 +36,22 @@ priors = TVVAR(y, fill(0.0, b+1, 1), Matrix(1000.0I, b+1, b+1), Matrix(1.0I, 1, 
 est = estimate(priors)
 
 # Plot simulated data and estimated means
-scatter(est.y, color = [:blue], markeralpha = 0.5, label = "observed")
-plot!(est.μ, color = [:blue], linewidth = 2; label = "predicted")
+pl = scatter(est.y, color = [:blue], markeralpha = 0.5, label = "observed", title = "Time series: AR(2)", legend = :topleft)
+pl = plot!(est.μ, color = [:blue], linewidth = 2; label = "predicted")
+
+savefig(pl,"./example/timeseries_uni.png")
 
 # Plot the estimated vs. true coefficients
 cols = [:blue :red :green :yellow]
-plot(est.m[:, :, 1], ylim = [-2, 2], color = cols, label = "", title = "Coefficients")
-plot!(fill(α, T), label = "a", color = cols[1], linestyle = :dash)
-plot!(fill(β[3], T), label = "b(1)", color = cols[2], linestyle = :dash)
-plot!(fill(β[2], T), label = "b(2)", color = cols[3], linestyle = :dash)
-plot!(fill(β[1], T), label = "b(3)", color = cols[4], linestyle = :dash)
+pl = plot(est.m[:, :, 1], ylim = [-2, 2], color = cols, label = "", title = "Coefficients")
+pl = plot!(fill(α, T), label = "a", color = cols[1], linestyle = :dash)
+pl = plot!(fill(β[2], T), label = "b(1)", color = cols[2], linestyle = :dash)
+pl = plot!(fill(β[1], T), label = "b(2)", color = cols[3], linestyle = :dash)
+
+savefig(pl,"./example/coefficients_uni.png")
 
 # Plot true and estimated variances
-plot(sqrt.(est.Σ[:, 1, 1]), color = [:blue], linewidth = 1,
-label = "", ylim = [0.0, 5.0], title = "Standard deviation")
-plot!(sqrt.(Σ), color = :blue, linestyle = :dash, label = "")
+pl = plot(est.Σ[:, 1, 1], color = [:blue], linewidth = 1, label = "", ylim = [0.0, 10.0], title = "Variance")
+pl = plot!(Σ, color = :blue, linestyle = :dash, label = "")
 
-figpath = "C:/Users/brett/OneDrive/Documents/Soc323/"
-savefig(fig1,figpath*"fig1.png")
-savefig(fig1,figpath*"fig1.svg")
-savefig(fig1,figpath*"fig1.pdf")
-
-# Construct priors
-priors2 = MSV(y, Matrix(1.0I, 1, 1), 0.99)
-
-# Estimate
-est2 = estimate(priors2)
+savefig(pl,"./example/variance_uni.png")

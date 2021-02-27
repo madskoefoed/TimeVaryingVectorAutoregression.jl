@@ -66,14 +66,14 @@ end
 function Estimation(priors::MSV)
     T, p = size(priors.y)
     return Estimation(priors.y,           # y
-                      zeros(T, a, p),     # m
-                      zeros(T, a, a),     # P
+                      fill(NaN, T, 1, p), # m
+                      fill(NaN, T, p, p), # P
                       zeros(T, p, p),     # S
-                      zeros(T, a*p, a*p), # Ω
+                      fill(NaN, T, p, p), # Ω
                       zeros(T, p),        # μ
                       zeros(T, p, p),     # Σ
                       priors.ν,           # ν
-                      0,                  # δ
+                      NaN,                # δ
                       zeros(T, p),        # e
                       zeros(T, p))        # u
 end

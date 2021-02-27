@@ -1,33 +1,57 @@
+"""
+Example: a AR(2) time series with 1000 observations. The variance quadruples after 500 observations.
+"""
 
 # Packages
 using Plots
 using Distributions
 
-# Generate time series with a doubling in volatility after 500 observations
-Σ = cholesky([2 -1; -1 4])
-T = 500
-y = randn(T, 2) * Σ.U
-Σ = cholesky([1 0; 0 1])
-T = 500
-y = vcat(y, randn(T, 2) * Σ.U) .+ [1.0 -4.0]
+# Generate an AR(3) time series with a doubling in volatility after half the observations observations:
+# y(t) = -1.0 + 0.5 * y(t-1) - 0.2 y(t-2) - 0.3 * y(t- 3) + Σ
+α = -1.0
+β = [0.5, -0.5]
+b = length(β)
+T = 1_000
+y = zeros(T, 1);
+Σ = ones(T)
+for t in 1:T
+    if t <= b
+        y[t] = α + rand(Normal(0.0, 1.0))
+    else
+        if t <= T/2
+            # Initial volatility (1.0)
+            y[t] = α + y[t-1:-1:t-b]' * β + rand(Normal(0.0, 1.0))
+        else
+            # Double volatility (2.0)
+            Σ[t] = 4.0
+            y[t] = α + y[t-1:-1:t-b]' * β + rand(Normal(0.0, sqrt(Σ[t])))
+        end
+    end
+end
 
 # Construct priors
-priors = Priors([-5.0 2.0], Matrix(1000.0I, 1, 1), Matrix(1.0I, 2, 2), 0.95, 0.95)
-
-# Simulate
-#O = simulate!(s)
+priors = TVVAR(y, fill(0.0, b+1, 1), Matrix(1000.0I, b+1, b+1), Matrix(1.0I, 1, 1), 0.99, 0.99)
 
 # Estimate
-estimated = estimate(y, priors)
+est = estimate(priors)
 
 # Plot simulated data and estimated means
-scatter(estimated.y, color = [:blue :red], markeralpha = 0.5, layout = (2, 1), label = "y")
-plot!(estimated.μ, color = [:blue :red], linewidth = 2; label = "μ")
+pl = scatter(est.y, color = [:blue], markeralpha = 0.5, label = "observed", title = "Time series: AR(3) with a change in variance after 500 observations")
+pl = plot!(est.μ, color = [:blue], linewidth = 2; label = "predicted")
+
+savefig(pl,"./example/timeseries.png")
+
+# Plot the estimated vs. true coefficients
+cols = [:blue :red :green :yellow]
+pl = plot(est.m[:, :, 1], ylim = [-2, 2], color = cols, label = "", title = "Coefficients")
+pl = plot!(fill(α, T), label = "a", color = cols[1], linestyle = :dash)
+pl = plot!(fill(β[2], T), label = "b(1)", color = cols[2], linestyle = :dash)
+pl = plot!(fill(β[1], T), label = "b(2)", color = cols[3], linestyle = :dash)
+
+savefig(pl,"./example/coefficients.png")
 
 # Plot true and estimated variances
-plot([estimated.Σ[:, 1, 1] estimated.Σ[:, 2, 2]], color = [:blue :red], linewidth = 1; label = "Predicted variance", layout = (2, 1), ylim = [0.0, 10.0])
-plot!([[ones(T)*2;ones(T)] [ones(T)*4;ones(T)]], color = :grey, linewidth = 2, label = "True variance")
+pl = plot(est.Σ[:, 1, 1], color = [:blue], linewidth = 1, label = "", ylim = [0.0, 10.0], title = "Variance")
+pl = plot!(Σ, color = :blue, linestyle = :dash, label = "")
 
-# Plot estimated variances vs. variance of state
-plot([estimated.Σ[:, 1, 1] estimated.Σ[:, 2, 2]], color = [:blue :red], linewidth = 1; label = "", layout = (2, 1), ylim = [0.0, 10.0])
-plot!([estimated.Ω[:, 1, 1] estimated.Ω[:, 2, 2]], color = :grey, label = "")
+savefig(pl,"./example/variance.png")
