@@ -11,6 +11,13 @@ function goodness_of_fit(estim::Estimation)
     MAE = mean(abs.(estim.e); dims = 1)
     RMSE = sqrt.(mean(estim.e.^2; dims = 1))
     MSSE = mean(estim.u.^2; dims = 1)
-    LL = mean([logpdf(MvTDist(estim.ν, estim.μ[t, :], estim.Σ[t, :, :]), estim.y[t, :]) for t in 1:size(estim.y, 1)])
-    return (ME = ME, MAE = MAE, RMSE = RMSE, MSSE = MSSE, LogLik = LL)
+    return (ME = ME, MAE = MAE, RMSE = RMSE, MSSE = MSSE)
+end
+
+function goodness_of_fit(estim::Estimation)
+    ME = mean(estim.e; dims = 1)
+    MAE = mean(abs.(estim.e); dims = 1)
+    RMSE = sqrt.(mean(estim.e.^2; dims = 1))
+    MSSE = mean(estim.u.^2; dims = 1)
+    return (ME = ME, MAE = MAE, RMSE = RMSE, MSSE = MSSE)
 end
