@@ -8,7 +8,6 @@ mutable struct MSV <: StateSpaceModel
     ν::Real
 
     function MSV(y, S, β)
-        T, p = size(y)
         str = "y is $(size(y, 1)) x $(size(y, 2)) and\nS is $(size(S, 1)) x $(size(S, 2))."
 
         !(size(y, 2) == size(S, 1) == size(S, 2)) && throw(DimensionMismatch(str))
@@ -32,7 +31,6 @@ mutable struct TVVAR <: StateSpaceModel
     ν::Real
 
     function TVVAR(y, m, P, S, β, δ)
-        T, p = size(y)
         str = "y is $(size(y, 1)) x $(size(y, 2)),\nm is $(size(m, 1)) x $(size(m, 2)),\nP is $(size(P, 1)) x $(size(P, 2)), \nS is $(size(S, 1)) x $(size(S, 2))."
 
         !(size(m, 1) == size(P, 1) == size(P, 2)) && throw(DimensionMismatch(str))

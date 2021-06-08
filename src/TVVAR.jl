@@ -10,7 +10,6 @@ using Distributions: Normal, MvNormal
 include("./src/types.jl")
 include("./src/utils.jl")
 include("./src/estimate.jl")
-#include("./src/simulate.jl")
 
 include("./example/univariate.jl")
 
