@@ -1,8 +1,8 @@
 mutable struct Model
-    y::Array{<:Real, 2} # T x p
-    m::Array{<:Real, 2} # dp + 1 x p
-    P::Array{<:Real, 2} # dp + 1 x dp + 1
-    S::Array{<:Real, 2} # p x p
+    y::FLOATMAT # T x p
+    m::FLOATMAT # dp + 1 x p
+    P::FLOATMAT # dp + 1 x dp + 1
+    S::FLOATMAT # p x p
     β::Real
     δ::Real
     function Model(y, m, P, S, β, δ)
@@ -16,23 +16,20 @@ mutable struct Model
 
         (δ  > 0 && δ <= 1) || throw(ArgumentError("0 < δ ≤ 1 required (currently $δ)."))
         (β > 2/3 && β < 1) || throw(ArgumentError("$(2//3) < β < 1 required (currently $β)."))
-
-        m = convert.(AbstractFloat, m)
-        P = convert.(AbstractFloat, P)
-        S = convert.(AbstractFloat, S)
         return new(y, m, P, S, β, δ)
     end
 end
 
 mutable struct Output
-    y::Array{<:Real, 2} # T x p
-    m::Array{<:Real, 3} # T x dp + 1 x p
-    P::Array{<:Real, 3} # T x dp + 1 x dp + 1
-    S::Array{<:Real, 3} # T x p x p
-    μ::Array{<:Real, 2} # T x p
-    Σ::Array{<:Real, 3} # T x p x p
-    e::Array{<:Real, 2} # T x p
-    u::Array{<:Real, 2} # T x p
+    y::FLOATMAT # T x p
+    m::FLOATARR # T x dp + 1 x p
+    P::FLOATARR # T x dp + 1 x dp + 1
+    S::FLOATARR # T x p x p
+    μ::FLOATMAT # T x p
+    Σ::FLOATARR # T x p x p
+    e::FLOATMAT # T x p
+    u::FLOATMAT # T x p
     ν::Real
+    β::Real
     δ::Real
 end

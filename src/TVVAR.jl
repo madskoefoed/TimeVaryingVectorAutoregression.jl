@@ -3,8 +3,9 @@
 # Code based on Forecasting with time-varying vector autoregressive models (2008), K. Triantafyllopoulos
 
 # Constant
-const FLOATVEC = Vector{T} where T <: AbstractFloat
-const FLOATMAT = Matrix{T} where T <: AbstractFloat
+const FLOATVEC = Vector{Fl} where Fl <: AbstractFloat
+const FLOATMAT = Matrix{Fl} where Fl <: AbstractFloat
+const FLOATARR = Array{Fl, 3} where Fl <: AbstractFloat
 
 # Import
 using LinearAlgebra: diag, kron, I, cholesky
