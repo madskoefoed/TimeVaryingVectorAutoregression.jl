@@ -14,15 +14,15 @@ using Distributions
       0.3  0.3];
 Σ = [1.0 0.5;
      0.5 2.0];
-y = simulate(β, Σ, 500);
+#y = simulate(β, Σ, 500);
 
 sim = Simulation([ 1.0 -1.0;
                   -0.4  0.4;
                    0.2 -0.2],
-                   Matrix(0.1*I, 3, 3),
-                   Matrix(0.5*I, 2, 2),
+                   Matrix(0.01*I, 3, 3),
+                   Matrix(0.05*I, 2, 2),
                    100);
-y = simulate(model)
+simulate!(sim)
 
 # Construct priors
 model = Model(y, fill(0.0, 5, 2), Matrix(1000.0I, 5, 5), Matrix(100.0I, 2, 2), 0.99, 0.99);

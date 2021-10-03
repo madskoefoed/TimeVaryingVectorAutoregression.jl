@@ -1,24 +1,24 @@
-function estimate(model::Model)
-    y, m, P, S, β, δ = model.y, model.m, model.P, model.S, model.β, model.δ
+function estimate(setup::Setup)
+    y, m, P, S, β, δ = setup.y, setup.m, setup.P, setup.S, setup.β, setup.δ
 
     T, p = size(y)
-    d = convert(Integer, (size(m, 1) - 1)/p)
+    d = get_d(setup)
     a = d*p + 1
     F = [1; zeros(a - 1)]
     k = get_k(p, β)
     ν = get_ν(β)
     
-    out = Output(y,               # y
-                 zeros(T, a, p),  # m
-                 zeros(T, a, a),  # P
-                 zeros(T, p, p),  # S
-                 zeros(T, p),     # μ
-                 zeros(T, p, p),  # Σ
-                 zeros(T, p),     # e
-                 zeros(T, p),     # u
-                 ν,
-                 β,
-                 δ)
+    out = Estimation(y,               # y
+                     zeros(T, a, p),  # m
+                     zeros(T, a, a),  # P
+                     zeros(T, p, p),  # S
+                     zeros(T, p),     # μ
+                     zeros(T, p, p),  # Σ
+                     zeros(T, p),     # e
+                     zeros(T, p),     # u
+                     ν,
+                     β,
+                     δ)
 
     for t = 1:T
         if d > 1 && t > d
