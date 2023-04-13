@@ -28,7 +28,7 @@ function estimate_batch!(model::TVVAR)
         model.loglik[t] = model.loglik[t-1] + ll
 
         # Update at time t|t
-        m, P, S = update_parameters(m, P, Q, S, F, e)
+        m, P, S = update_parameters(m, P, S, Q, F, e)
 
         # Storage
         model.m[t, :, :], model.P[t, :, :], model.S[t, :, :] = m, P, S
@@ -69,6 +69,7 @@ function update!(model::TVVAR, y::FLOATVEC)
     model.T += 1
     
     T, p, d = model.T, model.p, model.d
+    m, P, S, Q = model.m[T, :, :], model.P[T, :, :], model.S[T, :, :], model.Q[T]
 
     F = ones(1+d*p)
     if d > 0
@@ -90,12 +91,9 @@ function update!(model::TVVAR, y::FLOATVEC)
     ll = model.loglik[T-1] + ll
 
     # Update at time t|t
-    model.m[T, :, :], model.P[T, :, :], model.S[T, :, :] = update_parameters(model.m[T, :, :],
-                                                                             model.P[T, :, :],
-                                                                             model.Q[T],
-                                                                             model.S[T, :, :],
-                                                                             F,
-                                                                             e)
+    m, P, S = update_parameters(m, P, S, Q, F, e)
+
+    model.m[T, :, :], model.P[T, :, :], model.S[T, :, :] = m, P, S
 
     push!(model.loglik, ll)
 
@@ -110,7 +108,7 @@ function predict_parameters(P, S, F, δ, k)
     return (P, S, Q)
 end
 
-function update_parameters(m, P, Q, S, F, e)
+function update_parameters(m, P, S, Q, F, e)
     K = P * F / Q
     m = m + K * e'
     P = P - K * K' * Q

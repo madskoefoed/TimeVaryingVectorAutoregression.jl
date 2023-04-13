@@ -31,20 +31,15 @@ priors_example = Priors(zeros(d_example*p_example+1, p_example),
 
 hyperparam_example = Hyperparameters(0.99, 0.99);
 
-tvvar1 = TVVAR(y_example, priors_example, hyperparam_example);
+tvvar = TVVAR(y_example[end-49:end, :], priors_example, hyperparam_example);
 
-estimate_batch!(tvvar1)
+estimate_batch!(tvvar)
 
-tvvar2 = TVVAR(y_example[1:T_example-20, :], priors_example, hyperparam_example);
-
-estimate_batch!(tvvar2)
-
-for t in T_example-19:T_example
-    println("Time: $t")
-    predict!(tvvar2)
-    update!(tvvar2, y_example[t, :])
+for t in T_example-49:T_example
+    predict!(tvvar)
+    update!(tvvar, y_example[t, :])
 end
 
-plot(tvvar2.μ, lw=1, lc=[:black :red], label="")
+plot(tvvar.μ, lw=1, lc=[:black :red], label="")
 scatter!(y_example, lw=3, mc=[:black :red], ma=0.5, label=["y1" "y2"])
 plot!(legend=:outerbottom, legendcolumn=2)

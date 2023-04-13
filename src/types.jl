@@ -19,6 +19,8 @@ mutable struct Priors
 end
 
 Priors(m::FLOATVEC, P::FLOATMAT, S::Real) = Priors(reshape(m, (length(m), 1)), P, fill(S, 1, 1))
+Priors(m::FLOATMAT) = Priors(m, Matrix(Diagonal(ones(size(m, 1)))), Matrix(Diagonal(ones(size(m, 2)))))
+Priors(m::FLOATVEC) = Priors(m, Matrix(Diagonal(ones(size(m, 1)))), fill(S, 1, 1))
 
 mutable struct Hyperparameters
     β::Real
@@ -32,6 +34,7 @@ mutable struct Hyperparameters
         return new(β, δ, ν)
     end
 end
+Hyperparameters() = Hyperparameters(0.99, 0.99)
 
 mutable struct TVVAR <: TimeVaryingModels
     y::FLOATMAT

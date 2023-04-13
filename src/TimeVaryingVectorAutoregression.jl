@@ -1,4 +1,4 @@
-#module TVVAR
+module TimeVaryingVectorAutoregression
 
 # Code based on Forecasting with time-varying vector autoregressive models (2008), K. Triantafyllopoulos
 
@@ -17,9 +17,9 @@ include("types.jl")
 include("estimate.jl")
 
 # Exported types
-#export TVVAR, KF
+export TVVAR
 
 # Exported functions
-#export estimate
+export estimate_batch, predict!, update!
 
-#end
+end
