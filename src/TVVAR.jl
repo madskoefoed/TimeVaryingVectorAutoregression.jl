@@ -8,14 +8,13 @@ const FLOATMAT = Array{Fl, 2} where Fl <: AbstractFloat
 const FLOATARR = Array{Fl, 3} where Fl <: AbstractFloat
 
 # Import
-using LinearAlgebra: diag, kron, I, cholesky
-using Distributions: Normal, MvNormal, MatrixNormal
+using LinearAlgebra: diag, kron, I, cholesky, Diagonal
+using Distributions: Normal, MvNormal, MvTDist, logpdf
+using PDMats: PDMat
 
 # Include scripts
-include("./src/types.jl")
-include("./src/utils.jl")
-include("./src/estimate.jl")
-include("./src/simulate.jl")
+include("types.jl")
+include("estimate.jl")
 
 # Exported types
 #export TVVAR, KF

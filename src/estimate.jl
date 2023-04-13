@@ -1,67 +1,124 @@
-function estimate(setup::Setup)
-    y, m, P, S, β, δ = setup.y, setup.m, setup.P, setup.S, setup.β, setup.δ
+function estimate_batch!(model::TVVAR)
+    T, p, d, k = model.T, model.p, model.d, model.k
+    m, P, S = model.priors.m, model.priors.P, model.priors.S
+    β, δ = model.hyperparam.β, model.hyperparam.δ
+    y = model.y
 
-    T, p = size(y)
-    d = get_d(setup)
-    a = d*p + 1
-    F = [1; zeros(a - 1)]
-    k = get_k(p, β)
-    ν = get_ν(β)
-    
-    out = Estimation(y,               # y
-                     zeros(T, a, p),  # m
-                     zeros(T, a, a),  # P
-                     zeros(T, p, p),  # S
-                     zeros(T, p),     # μ
-                     zeros(T, p, p),  # Σ
-                     zeros(T, p),     # e
-                     zeros(T, p),     # u
-                     ν,
-                     β,
-                     δ)
-
-    for t = 1:T
-        if d > 1 && t > d
-            F[2:end] = vec(y[t-1:-1:t-d, :])
+    F = ones(1+d*p)
+    for t in (d + 1):T
+        if d > 0
+            F[2:end] = vec(y[t-d:t-1, :])
         end
-        
+
         # Predict parameters at time t|t-1
         P, S, Q = predict_parameters(P, S, F, δ, k)
-        
+
+        model.Q[t] = Q
+
         # Predict at time t|t-1
-        μ, Σ = predict(m, Q, S, F, β)
+        μ, Σ = predict_outcome(m, Q, S, F, β)
 
         # Prediction error
-        e = error(y[t, :], μ)
+        e = model.y[t, :] - μ
         u = standardised_error(e, Σ)
 
-        # Storage
-        out.m[t, :, :] = m
-        out.P[t, :, :] = P
-        out.S[t, :, :] = S
-        out.μ[t, :]    = μ
-        out.Σ[t, :, :] = Σ
-        out.e[t, :]    = e
-        out.u[t, :]    = u
+        # Predictive log-likelihood
+        ll = logpdf(MvTDist(model.hyperparam.ν, μ, PDMat(Σ)), model.y[t, :])
+
+        model.loglik[t] = model.loglik[t-1] + ll
 
         # Update at time t|t
-        if t > d
-            m, P, S = update_parameters(m, P, Q, S, F, e)
-        end
+        m, P, S = update_parameters(m, P, Q, S, F, e)
 
+        # Storage
+        model.m[t, :, :], model.P[t, :, :], model.S[t, :, :] = m, P, S
+        model.μ[t, :], model.Σ[t, :, :], model.e[t, :], model.u[t, :] = μ, Σ, e, u
     end
-    return out
+end
+
+function predict!(model::TVVAR)
+    T, p, d, k = model.T, model.p, model.d, model.k
+    m, P, S = model.m[T, :, :], model.P[T, :, :], model.S[T, :, :]
+    β, δ = model.hyperparam.β, model.hyperparam.δ
+    y = model.y
+
+    F = ones(1+d*p)
+    if d > 0
+        F[2:end] = vec(y[T-d+1:T, :])
+    end
+
+    # Predict parameters at time t|t-1
+    P, S, Q = predict_parameters(P, S, F, δ, k)
+    
+    push!(model.Q, Q)
+
+    # Predict at time t|t-1
+    μ, Σ = predict_outcome(m, Q, S, F, β)
+
+    # Expand containers
+    model.m = vcat(model.m, reshape(m, (1, d*p+1, p)))
+    model.P = vcat(model.P, reshape(P, (1, d*p+1, d*p+1)))
+    model.S = vcat(model.S, reshape(S, (1, p, p)))
+
+    model.μ = vcat(model.μ, μ')
+    model.Σ = vcat(model.Σ, reshape(Σ, (1, p, p)))
+end
+
+function update!(model::TVVAR, y::FLOATVEC)
+    # Update T
+    model.T += 1
+    
+    T, p, d = model.T, model.p, model.d
+
+    F = ones(1+d*p)
+    if d > 0
+        F[2:end] = vec(model.y[T-d:T-1, :])
+    end
+
+    # Expand y
+    model.y = vcat(model.y, y')
+
+    # Predictions at time t|t-1
+    μ = model.μ[T, :]
+    Σ = PDMat(model.Σ[T, :, :])
+
+    # Prediction error
+    e = y - μ
+    u = standardised_error(e, Σ)
+
+    ll = logpdf(MvTDist(model.hyperparam.ν, μ, Σ), y)
+    ll = model.loglik[T-1] + ll
+
+    # Update at time t|t
+    model.m[T, :, :], model.P[T, :, :], model.S[T, :, :] = update_parameters(model.m[T, :, :],
+                                                                             model.P[T, :, :],
+                                                                             model.Q[T],
+                                                                             model.S[T, :, :],
+                                                                             F,
+                                                                             e)
+
+    push!(model.loglik, ll)
+
+    model.e = vcat(model.e, e')
+    model.u = vcat(model.u, u')
 end
 
 function predict_parameters(P, S, F, δ, k)
-    # note: m is not updated
     P = P / δ
     Q = F' * P * F + 1.0
     S = S / k
     return (P, S, Q)
 end
 
-function predict(m, Q, S, F, β)
+function update_parameters(m, P, Q, S, F, e)
+    K = P * F / Q
+    m = m + K * e'
+    P = P - K * K' * Q
+    S = S + e*e'/Q
+    return (m, P, S)
+end
+
+function predict_outcome(m, Q, S, F, β)
     μ = m' * F
     Σ = Q * (1 - β) / (3β - 2) * S
     return (μ, Σ)
@@ -73,12 +130,4 @@ end
 
 function standardised_error(e, Σ)
     return inv(cholesky(Σ).L) * e
-end
-
-function update_parameters(m, P, Q, S, F, e)
-    K = P * F / Q
-    m = m + K * e'
-    P = P - K * K' * Q
-    S = S + e*e'/Q
-    return (m, P, S)
 end
