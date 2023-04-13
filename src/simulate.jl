@@ -4,7 +4,10 @@ function simulate(T::Integer, β::FLOATMAT, Σ::PDMat)
     d, p = size(β)
     d = Integer((d - 1)/p)
 
-    # Define the error terms
+    str = "β is a $(size(β, 1)) x $(size(β, 2)) matrix,\nwhile Σ is $(size(Σ, 1)) x $(size(Σ, 2)), \nS is $(size(S, 1)) x $(size(S, 2))."
+    !(p == size(Σ, 1) == size(Σ, 2)) && throw(DimensionMismatch(str))
+
+    # Define the error distribution
     error_dist = MvNormal(Σ)
 
     # Storage
