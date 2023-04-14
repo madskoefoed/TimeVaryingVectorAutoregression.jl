@@ -18,15 +18,15 @@ mutable struct Priors
         end
 end
 
-Priors(m::FLOATVEC, P::FLOATMAT, S::Real) = Priors(reshape(m, (length(m), 1)), P, fill(S, 1, 1))
+Priors(m::FLOATVEC, P::FLOATMAT, S::AbstractFloat) = Priors(reshape(m, (length(m), 1)), P, fill(S, 1, 1))
 Priors(m::FLOATMAT) = Priors(m, Matrix(Diagonal(ones(size(m, 1)))), Matrix(Diagonal(ones(size(m, 2)))))
 Priors(m::FLOATVEC) = Priors(m, Matrix(Diagonal(ones(size(m, 1)))), fill(S, 1, 1))
 
 mutable struct Hyperparameters
-    β::Real
-    δ::Real
-    ν::Real
-    function Hyperparameters(β::Real, δ::Real)
+    β::AbstractFloat
+    δ::AbstractFloat
+    ν::AbstractFloat
+    function Hyperparameters(β::AbstractFloat, δ::AbstractFloat)
         (δ > 0   && δ <= 1) || throw(ArgumentError("0 < δ ≤ 1 required (currently $δ)."))
         (β > 2/3 && β  < 1) || throw(ArgumentError("$(2//3) < β < 1 required (currently $β)."))
         n = 1/(1 - β)
@@ -52,7 +52,7 @@ mutable struct TVVAR <: TimeVaryingModels
     T::Integer
     p::Integer
     d::Integer
-    k::Real
+    k::AbstractFloat
 
     function TVVAR(y::FLOATMAT, priors::Priors, hyperparam::Hyperparameters)
 
