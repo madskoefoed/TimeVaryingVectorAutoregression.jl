@@ -23,7 +23,7 @@ function estimate_batch!(model::TVVAR)
         u = standardised_error(e, Σ)
 
         # Predictive log-likelihood
-        ll = logpdf(MvTDist(model.hyperparam.ν, μ, PDMat(Σ)), model.y[t, :])
+        ll = logpdf(MvTDist(model.hyperparam.ν, μ, Σ), model.y[t, :])
 
         model.loglik[t] = model.loglik[t-1] + ll
 
@@ -118,7 +118,7 @@ end
 
 function predict_outcome(m, Q, S, F, β)
     μ = m' * F
-    Σ = Q * (1 - β) / (3β - 2) * S
+    Σ = PDMat(Q * (1 - β) / (3β - 2) * S)
     return (μ, Σ)
 end
 

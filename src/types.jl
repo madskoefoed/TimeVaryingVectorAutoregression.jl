@@ -2,9 +2,9 @@ abstract type TimeVaryingModels end
 
 mutable struct Priors
     m::FLOATMAT
-    P::FLOATMAT
-    S::FLOATMAT
-    function Priors(m::FLOATMAT, P::FLOATMAT, S::FLOATMAT)
+    P::PDMat
+    S::PDMat
+    function Priors(m::FLOATMAT, P::PDMat, S::PDMat)
 
         str = "m is $(size(m, 1)) x $(size(m, 2)),\nP is $(size(P, 1)) x $(size(P, 2)), \nS is $(size(S, 1)) x $(size(S, 2))."
 
@@ -18,9 +18,9 @@ mutable struct Priors
         end
 end
 
-Priors(m::FLOATVEC, P::FLOATMAT, S::AbstractFloat) = Priors(reshape(m, (length(m), 1)), P, fill(S, 1, 1))
-Priors(m::FLOATMAT) = Priors(m, Matrix(Diagonal(ones(size(m, 1)))), Matrix(Diagonal(ones(size(m, 2)))))
-Priors(m::FLOATVEC) = Priors(m, Matrix(Diagonal(ones(size(m, 1)))), fill(S, 1, 1))
+Priors(m::FLOATVEC, P::PDMat, S::AbstractFloat) = Priors(reshape(m, (length(m), 1)), P, get_diag_covmat(size(m, 2), S))
+Priors(m::FLOATMAT) = Priors(m, get_diag_covmat(size(m, 1), 1000.0), get_diag_covmat(size(m, 2), 1.0))
+Priors(m::FLOATVEC) = Priors(m, get_diag_covmat(size(m, 1), 1000.0), get_diag_covmat(1, 1.0))
 
 mutable struct Hyperparameters
     β::AbstractFloat

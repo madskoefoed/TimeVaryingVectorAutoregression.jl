@@ -4,7 +4,7 @@ function simulate(T::Integer, β::FLOATMAT, Σ::PDMat)
     d, p = size(β)
     d = Integer((d - 1)/p)
 
-    str = "β is a $(size(β, 1)) x $(size(β, 2)) matrix,\nwhile Σ is $(size(Σ, 1)) x $(size(Σ, 2)), \nS is $(size(S, 1)) x $(size(S, 2))."
+    str = "β is a $(size(β, 1)) x $(size(β, 2)) matrix,\nwhile Σ is $(size(Σ, 1)) x $(size(Σ, 2))."
     !(p == size(Σ, 1) == size(Σ, 2)) && throw(DimensionMismatch(str))
 
     # Define the error distribution
@@ -25,4 +25,14 @@ function simulate(T::Integer, β::FLOATMAT, Σ::PDMat)
     end
 
     return y
+end
+
+function get_diag_covmat(p::Integer, scalar::AbstractFloat)
+    covmat = PDMat(Matrix(Diagonal(ones(p)*scalar)))
+    return covmat
+end
+
+function get_diag_covmat(d::Vector{<:Real})
+    covmat = PDMat(Matrix(Diagonal(d)))
+    return covmat
 end

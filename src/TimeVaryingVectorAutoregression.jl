@@ -15,11 +15,15 @@ using PDMats: PDMat
 # Include scripts
 include("types.jl")
 include("estimate.jl")
+include("simulate.jl")
 
 # Exported types
+export Hyperparameters
+export Priors
 export TVVAR
 
 # Exported functions
-export estimate_batch, predict!, update!
+export estimate_batch!, predict!, update!, simulate
+export get_diag_covmat
 
 end
