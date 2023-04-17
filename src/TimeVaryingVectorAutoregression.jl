@@ -23,7 +23,8 @@ export Priors
 export TVVAR
 
 # Exported functions
-export estimate_batch!, predict!, update!, simulate
+export estimate_batch!, predict!, update!
+export simulate
 export get_diag_covmat
 
 end
