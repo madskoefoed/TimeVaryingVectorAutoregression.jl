@@ -21,15 +21,15 @@ F_{t} = [1 \quad y_{t-1}^{'} \quad \cdots \quad y_{t-d}^{'}]^{'} \\
 t > d \\
 \end{aligned}$$
 
-The $ p \times p $ covariance matrix $ \Sigma_{t} $ is assumed to be symmetric positive-definite and follows:
+The $p \times p$ covariance matrix $\Sigma_{t}$ is assumed to be symmetric positive-definite and follows:
 
 $$\begin{aligned}
 \Sigma_{t}^{-1} = k \Gamma(\Sigma_{t-1}^{-1})' B_{t} \Gamma(\Sigma_{t-1}^{-1}) \\
 \end{aligned}$$
 
-where $ \Gamma(\Sigma_{t-1}^{-1}) $ denotes the upper triangular matrix of the Choleski decomposition of $ \Sigma_{t}^{-1} $.
+where $\Gamma(\Sigma_{t-1}^{-1})$ denotes the upper triangular matrix of the Choleski decomposition of $\Sigma_{t}^{-1}$.
 
-The parameter matrix $ \Phi_{t} $ is assumed to follow a random walk:
+The parameter matrix $\Phi_{t}$ is assumed to follow a random walk:
 
 $$\begin{aligned}
 \Phi_{t} = \Phi_{t-1} + \Omega_{t} \\
