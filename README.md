@@ -60,8 +60,8 @@ hyperpar = Hyperparameters(0.9, 0.95)
 ```
 
 ### Prior distributions
-At time $t=d$ we assume that we know the quantities $ m_{d} $, $ P_{d} $, and $ S_{d} $, whereby we have the prior distributions $ \Omega_{d} \sim N_{(dp+1) \ times p}N(m_{d}, P_{d}, \Sigma_{d}) $ and $ \Sigma_{t}^{-1} \sim W_{p}(n+2p, S_{d}) $.
-In Triantafyllopoulus (2008) a weakly prior specificion is suggested as $ m_{d} = 0_{dp+1 \times p} $, $ P_{d} = 1000I_{dp+1} $, and $ S_{d} = I_{p} $. We can write this in Julia as:
+At time $t=d$ we assume that we know the quantities $m_{d}$, $P_{d}$, and $S_{d}$, whereby we have the prior distributions $\Omega_{d} \sim N_{(dp+1) \ times p}N(m_{d}, P_{d}, \Sigma_{d})$ and $\Sigma_{t}^{-1} \sim W_{p}(n+2p, S_{d})$.
+In Triantafyllopoulus (2008) a weakly prior specificion is suggested as $m_{d} = 0_{dp+1 \times p}$, $P_{d} = 1000I_{dp+1}$, and $S_{d} = I_{p}$. We can write this in Julia as:
 
 ```julia
 # Weakly prior specification
