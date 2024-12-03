@@ -1,4 +1,4 @@
-name = "TimeVaryingVectorAutoregression"
+name = "MultivariateStochasticVolatility"
 uuid = "a0c9c6ed-db83-4746-ae2d-166d78480cea"
 authors = ["Mads Koefoed"]
 version = "0.1.0"
